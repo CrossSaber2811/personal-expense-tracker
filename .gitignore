@@ -6,6 +6,7 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/tasks.json
+!.vscode/settings.json
 *.iml
 *.ipr
 *.iws
