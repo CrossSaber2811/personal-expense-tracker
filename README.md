@@ -44,3 +44,34 @@ Toàn bộ tài liệu đặc tả kiến trúc và thiết kế hệ thống đ
 * **Backend:** Java 17/21, Spring Boot 3, Spring Web, Spring Data JPA, Spring Security, JWT, Bean Validation, Lombok
 * **Database:** PostgreSQL 15+
 * **Testing:** JUnit 5, Mockito, Spring Boot Test, MockMvc, Postman
+
+---
+
+## 🚀 Hướng dẫn khởi chạy (Run All)
+
+Bạn có thể chạy đồng thời cả Backend (Spring Boot) và Frontend (React Vite) bằng bất kỳ cách nào dưới đây:
+
+### Cách 1: Click đúp tệp Batch (Nhanh nhất trên Windows)
+- Click đúp vào file `run-dev.bat` ở thư mục gốc của project (hoặc gõ `.\run-dev.bat` trong terminal).
+- Script sẽ tự động mở 2 cửa sổ terminal riêng biệt:
+  - **Backend**: `http://localhost:8080/api/health`
+  - **Frontend**: `http://localhost:5173`
+
+### Cách 2: Chạy qua PowerShell Script
+Mở PowerShell tại thư mục gốc dự án và chạy:
+```powershell
+.\run-dev.ps1
+```
+
+### Cách 3: Chạy chung 1 terminal bằng npm
+Từ thư mục gốc dự án:
+```powershell
+npm run dev
+# hoặc
+npm start
+```
+*Lệnh này sử dụng `concurrently` để gom log của cả Spring Boot và React vào chung 1 cửa sổ với tiền tố màu sắc rõ ràng.*
+
+### Cách 4: Chạy trực tiếp từ Antigravity IDE / VS Code Tasks
+- Nhấn tổ hợp phím `Ctrl + Shift + B` (Default Build Task).
+- Hoặc mở Command Palette (`Ctrl + Shift + P`) -> chọn **Tasks: Run Task** -> chọn **Run All (Backend + Frontend)**.
