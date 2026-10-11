@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { authService } from './authService';
 import { AuthResponse, ErrorResponse } from '../../types/auth';
 import axios from 'axios';
+import { UserPlus, User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface RegisterPageProps {
   onSuccess?: (user: AuthResponse) => void;
@@ -13,19 +15,31 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess, onGoToLog
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [successData, setSuccessData] = useState<AuthResponse | null>(null);
+
+  const navigate = useNavigate();
+
+  const handleNavigateToLogin = () => {
+    if (onGoToLogin) {
+      onGoToLogin();
+    } else {
+      navigate('/login');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setFieldErrors({});
 
-    // Client-side quick checks
-    if (password !== confirmPassword) {
-      setFieldErrors({ confirmPassword: 'Xác nhận mật khẩu không khớp' });
+    if (username.trim().length < 3) {
+      setFieldErrors({ username: 'Tên người dùng phải từ 3 đến 50 ký tự' });
       return;
     }
 
@@ -34,9 +48,20 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess, onGoToLog
       return;
     }
 
+    const hasLetterAndNumber = /(?=.*[A-Za-z])(?=.*\d)/.test(password);
+    if (!hasLetterAndNumber) {
+      setFieldErrors({ password: 'Mật khẩu phải bao gồm cả chữ và số' });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setFieldErrors({ confirmPassword: 'Xác nhận mật khẩu không khớp' });
+      return;
+    }
+
     setLoading(true);
     try {
-      const data = await authService.register({ username, email, password });
+      const data = await authService.register({ username: username.trim(), email: email.trim(), password });
       setSuccessData(data);
       if (onSuccess) {
         onSuccess(data);
@@ -49,7 +74,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess, onGoToLog
           setFieldErrors(errorData.validationErrors);
         }
       } else {
-        setErrorMsg('Không thể kết nối đến máy chủ.');
+        setErrorMsg('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
       }
     } finally {
       setLoading(false);
@@ -58,162 +83,246 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess, onGoToLog
 
   if (successData) {
     return (
-      <div className="card" style={{ maxWidth: '440px', margin: '40px auto' }}>
-        <div style={{ textAlign: 'center', padding: '16px' }}>
-          <div className="badge badge-success" style={{ fontSize: '16px', padding: '8px 16px', marginBottom: '16px' }}>
-            ✓ Đăng ký thành công!
-          </div>
-          <p style={{ marginBottom: '8px' }}>
-            Chào mừng thành viên mới: <strong>{successData.username}</strong>
-          </p>
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
-            Email đăng ký: {successData.email}
-          </p>
-          {onGoToLogin ? (
-            <button className="btn" onClick={onGoToLogin} style={{ width: '100%' }}>
-              Đi đến Đăng nhập (F02)
-            </button>
-          ) : (
-            <button className="btn" onClick={() => setSuccessData(null)} style={{ width: '100%' }}>
-              Tạo tài khoản khác
-            </button>
-          )}
+      <div className="card fade-in" style={{ padding: '36px 32px', textAlign: 'center' }}>
+        <div
+          style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            backgroundColor: 'var(--success-light)',
+            color: 'var(--success)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '16px',
+            border: '2px solid var(--success-border)',
+          }}
+        >
+          <CheckCircle2 size={32} />
         </div>
+        <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
+          Đăng Ký Thành Công!
+        </h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '24px', lineHeight: 1.6 }}>
+          Tài khoản <strong>{successData.username}</strong> ({successData.email}) đã được khởi tạo. Bạn có thể đăng nhập ngay bây giờ.
+        </p>
+
+        <button
+          className="btn btn-primary"
+          onClick={handleNavigateToLogin}
+          style={{ width: '100%', padding: '12px' }}
+        >
+          Đến Trang Đăng Nhập
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="card" style={{ maxWidth: '440px', margin: '40px auto' }}>
-      <h2 style={{ fontSize: '22px', marginBottom: '6px', textAlign: 'center' }}>Đăng Ký Tài Khoản</h2>
-      <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '24px', textAlign: 'center' }}>
-        Tạo tài khoản cá nhân để quản lý thu chi
-      </p>
+    <div className="card fade-in" style={{ padding: '36px 32px' }}>
+      {/* Form Header */}
+      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        <div
+          style={{
+            width: '52px',
+            height: '52px',
+            borderRadius: '16px',
+            background: 'var(--primary-light)',
+            color: 'var(--primary)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '16px',
+            boxShadow: '0 4px 12px rgba(79, 70, 229, 0.15)',
+          }}
+        >
+          <UserPlus size={26} />
+        </div>
+        <h2 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '6px' }}>
+          Tạo Tài Khoản Mới
+        </h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+          Bắt đầu quản lý tài chính thông minh ngay hôm nay
+        </p>
+      </div>
 
+      {/* Error Alert */}
       {errorMsg && (
-        <div style={{ padding: '12px', background: '#fee2e2', border: '1px solid #fecaca', borderRadius: '6px', color: '#991b1b', marginBottom: '16px', fontSize: '14px' }}>
-          {errorMsg}
+        <div className="alert alert-danger fade-in">
+          <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+          <span>{errorMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>
-            Tên người dùng (3–50 ký tự)
+      <form onSubmit={handleSubmit} noValidate>
+        {/* Username Field */}
+        <div className="form-group">
+          <label htmlFor="register-username" className="form-label">
+            Tên người dùng
           </label>
-          <input
-            type="text"
-            required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="vd: dangvu"
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: `1px solid ${fieldErrors.username ? 'var(--danger)' : 'var(--border)'}`,
-              borderRadius: '6px',
-              fontSize: '14px'
-            }}
-          />
-          {fieldErrors.username && (
-            <span style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-              {fieldErrors.username}
+          <div className="input-container">
+            <span className="input-icon">
+              <User size={18} />
             </span>
+            <input
+              id="register-username"
+              type="text"
+              required
+              className={`form-input ${fieldErrors.username ? 'has-error' : ''}`}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="vd: dangvu"
+            />
+          </div>
+          {fieldErrors.username && (
+            <div className="form-error">
+              <span>{fieldErrors.username}</span>
+            </div>
           )}
         </div>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>
+        {/* Email Field */}
+        <div className="form-group">
+          <label htmlFor="register-email" className="form-label">
             Địa chỉ Email
           </label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="vd: dang@gmail.com"
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: `1px solid ${fieldErrors.email ? 'var(--danger)' : 'var(--border)'}`,
-              borderRadius: '6px',
-              fontSize: '14px'
-            }}
-          />
+          <div className="input-container">
+            <span className="input-icon">
+              <Mail size={18} />
+            </span>
+            <input
+              id="register-email"
+              type="email"
+              required
+              className={`form-input ${fieldErrors.email ? 'has-error' : ''}`}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="vd: dang@gmail.com"
+            />
+          </div>
           {fieldErrors.email && (
-            <span style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-              {fieldErrors.email}
-            </span>
+            <div className="form-error">
+              <span>{fieldErrors.email}</span>
+            </div>
           )}
         </div>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>
-            Mật khẩu (ít nhất 6 ký tự, có chữ và số)
+        {/* Password Field */}
+        <div className="form-group">
+          <label htmlFor="register-password" className="form-label">
+            Mật khẩu
           </label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: `1px solid ${fieldErrors.password ? 'var(--danger)' : 'var(--border)'}`,
-              borderRadius: '6px',
-              fontSize: '14px'
-            }}
-          />
-          {fieldErrors.password && (
-            <span style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-              {fieldErrors.password}
+          <div className="input-container">
+            <span className="input-icon">
+              <Lock size={18} />
             </span>
+            <input
+              id="register-password"
+              type={showPassword ? 'text' : 'password'}
+              required
+              className={`form-input ${fieldErrors.password ? 'has-error' : ''}`}
+              style={{ paddingRight: '42px' }}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Tối thiểu 6 ký tự (có chữ & số)"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '12px',
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-subtle)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '4px',
+              }}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          {fieldErrors.password && (
+            <div className="form-error">
+              <span>{fieldErrors.password}</span>
+            </div>
           )}
         </div>
 
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>
+        {/* Confirm Password Field */}
+        <div className="form-group" style={{ marginBottom: '24px' }}>
+          <label htmlFor="register-confirm-password" className="form-label">
             Xác nhận mật khẩu
           </label>
-          <input
-            type="password"
-            required
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="••••••••"
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: `1px solid ${fieldErrors.confirmPassword ? 'var(--danger)' : 'var(--border)'}`,
-              borderRadius: '6px',
-              fontSize: '14px'
-            }}
-          />
-          {fieldErrors.confirmPassword && (
-            <span style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-              {fieldErrors.confirmPassword}
+          <div className="input-container">
+            <span className="input-icon">
+              <Lock size={18} />
             </span>
+            <input
+              id="register-confirm-password"
+              type={showConfirm ? 'text' : 'password'}
+              required
+              className={`form-input ${fieldErrors.confirmPassword ? 'has-error' : ''}`}
+              style={{ paddingRight: '42px' }}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Nhập lại mật khẩu"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm(!showConfirm)}
+              style={{
+                position: 'absolute',
+                right: '12px',
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-subtle)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '4px',
+              }}
+            >
+              {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          {fieldErrors.confirmPassword && (
+            <div className="form-error">
+              <span>{fieldErrors.confirmPassword}</span>
+            </div>
           )}
         </div>
 
-        <button type="submit" className="btn" style={{ width: '100%', justifyContent: 'center' }} disabled={loading}>
-          {loading ? 'Đang xử lý...' : 'Đăng Ký Tài Khoản'}
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="btn btn-primary"
+          style={{ width: '100%', padding: '12px' }}
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <span className="spin" style={{ display: 'inline-block', width: '16px', height: '16px', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%' }}></span>
+              <span>Đang tạo tài khoản...</span>
+            </>
+          ) : (
+            'Đăng Ký Tài Khoản'
+          )}
         </button>
       </form>
 
-      {onGoToLogin && (
-        <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
-          Đã có tài khoản?{' '}
-          <button
-            type="button"
-            onClick={onGoToLogin}
-            style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
-          >
-            Đăng nhập
-          </button>
-        </div>
-      )}
+      {/* Switch to Login */}
+      <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px', color: 'var(--text-muted)' }}>
+        Đã có tài khoản?{' '}
+        <Link
+          to="/login"
+          style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}
+        >
+          Đăng nhập ngay
+        </Link>
+      </div>
     </div>
   );
 };
