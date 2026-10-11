@@ -1,11 +1,13 @@
 server:
-  port: 8080
+  port: ${PORT:8088}
 
 spring:
   application:
     name: personal-expense-tracker-backend
+  profiles:
+    active: dev
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/expense_tracker}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/expense_tracker}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver

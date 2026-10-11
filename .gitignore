@@ -4,7 +4,9 @@ Thumbs.db
 
 # IDE and Editor Files
 .idea/
-.vscode/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/settings.json
 *.iml
 *.ipr
 *.iws
@@ -15,7 +17,8 @@ backend/.mvn/
 backend/*.log
 backend/logs/
 
-# Frontend (Node & Vite)
+# Frontend & Root (Node & Vite)
+node_modules/
 frontend/node_modules/
 frontend/dist/
 frontend/.env.local
