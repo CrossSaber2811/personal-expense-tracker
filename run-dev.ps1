@@ -48,10 +48,10 @@ try {
 
 Write-Host "`n[2/3] Cấu hình môi trường:" -ForegroundColor Cyan
 Write-Host "  - Profile Spring Boot : $($env:SPRING_PROFILES_ACTIVE)" -ForegroundColor White
-Write-Host "  - Backend API         : http://localhost:8080/api/health" -ForegroundColor White
-Write-Host "  - Frontend UI         : http://localhost:5173" -ForegroundColor White
+Write-Host "  - Backend API         : http://localhost:8088/api/health" -ForegroundColor White
+Write-Host "  - Frontend UI         : http://localhost:5180" -ForegroundColor White
 if ($env:SPRING_PROFILES_ACTIVE -eq "dev") {
-    Write-Host "  - H2 Console          : http://localhost:8080/h2-console" -ForegroundColor White
+    Write-Host "  - H2 Console          : http://localhost:8088/h2-console" -ForegroundColor White
 }
 
 if ($Popup) {
