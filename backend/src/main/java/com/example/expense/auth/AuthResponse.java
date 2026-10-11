@@ -13,6 +13,7 @@ public class AuthResponse {
     private String token;
     @Builder.Default
     private String type = "Bearer";
+    private Long expiresIn;
     private Long id;
     private String username;
     private String email;

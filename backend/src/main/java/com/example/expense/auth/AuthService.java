@@ -1,5 +1,6 @@
 package com.example.expense.auth;
 
+import com.example.expense.config.JwtTokenProvider;
 import com.example.expense.exception.BusinessException;
 import com.example.expense.user.Role;
 import com.example.expense.user.User;
@@ -7,6 +8,7 @@ import com.example.expense.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -51,6 +54,39 @@ public class AuthService {
                 .email(savedUser.getEmail())
                 .role(savedUser.getRole().name())
                 .message("Đăng ký tài khoản thành công")
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public AuthResponse login(LoginRequest request) {
+        String cleanEmail = request.getEmail().trim().toLowerCase();
+        log.info("Processing user login attempt for email: {}", cleanEmail);
+
+        String genericErrorMessage = "Email hoặc mật khẩu không chính xác";
+
+        User user = userRepository.findByEmail(cleanEmail)
+                .orElseThrow(() -> {
+                    log.warn("Login failed: Unknown email: {}", cleanEmail);
+                    return new BadCredentialsException(genericErrorMessage);
+                });
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            log.warn("Login failed: Incorrect password for user ID: {}", user.getId());
+            throw new BadCredentialsException(genericErrorMessage);
+        }
+
+        String token = jwtTokenProvider.generateToken(user);
+        log.info("User authenticated successfully. Generated JWT for user ID: {}", user.getId());
+
+        return AuthResponse.builder()
+                .token(token)
+                .type("Bearer")
+                .expiresIn(jwtTokenProvider.getExpirationMs())
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .message("Đăng nhập thành công")
                 .build();
     }
 }

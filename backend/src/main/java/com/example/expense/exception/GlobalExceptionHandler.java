@@ -19,6 +19,19 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler({org.springframework.security.authentication.BadCredentialsException.class, UnauthorizedException.class})
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(Exception ex, HttpServletRequest request) {
+        log.warn("Authentication failed at {}: {}", request.getRequestURI(), ex.getMessage());
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error("UNAUTHORIZED")
+                .message(ex.getMessage() != null ? ex.getMessage() : "Email hoặc mật khẩu không chính xác")
+                .path(request.getRequestURI())
+                .build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    }
+
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex, HttpServletRequest request) {
         log.warn("Business rule violation at {}: {}", request.getRequestURI(), ex.getMessage());
